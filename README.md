@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Perfil e Configurações</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        transition: 0.3s;
+        background-color: #f4f6f9;
+    }
+
+    .dark {
+        background-color: #1e1e1e;
+        color: white;
+    }
+
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px;
+        text-align: center;
+    }
+
+    nav {
+        display: flex;
+        justify-content: center;
+        background-color: #34495e;
+    }
+
+    nav button {
+        background: none;
+        border: none;
+        color: white;
+        padding: 15px 20px;
+        cursor: pointer;
+    }
+
+    nav button:hover {
+        background-color: #2c3e50;
+    }
+
+    .container {
+        padding: 20px;
+        max-width: 600px;
+        margin: auto;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+
+    .dark .card {
+        background: #2c2c2c;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    button.save {
+        background-color: #27ae60;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .msg {
+        margin-top: 10px;
+        font-size: 14px;
+        color: green;
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Perfil e Configurações</h1>
+</header>
+
+<nav>
+    <button onclick="mostrar('perfil')">Perfil</button>
+    <button onclick="mostrar('config')">Configurações</button>
+</nav>
+
+<div class="container">
+
+    <!-- PERFIL -->
+    <div id="perfil" class="card">
+        <h2>👤 Perfil</h2>
+
+        <input id="nome" type="text" placeholder="Nome">
+        <input id="email" type="email" placeholder="Email">
+        <input id="senha" type="password" placeholder="Senha">
+
+        <button class="save" onclick="salvarPerfil()">Salvar</button>
+        <div class="msg" id="msgPerfil"></div>
+    </div>
+
+    <!-- CONFIG -->
+    <div id="config" class="card hidden">
+        <h2>⚙️ Configurações</h2>
+
+        <label>Tema:</label>
+        <select id="tema">
+            <option value="claro">Claro</option>
+            <option value="escuro">Escuro</option>
+        </select>
+
+        <label>Notificações:</label>
+        <select id="notif">
+            <option>Ativadas</option>
+            <option>Desativadas</option>
+        </select>
+
+        <label>Idioma:</label>
+        <select id="idioma">
+            <option>Português</option>
+            <option>Inglês</option>
+            <option>Espanhol</option>
+        </select>
+
+        <button class="save" onclick="salvarConfig()">Salvar</button>
+        <div class="msg" id="msgConfig"></div>
+    </div>
+
+</div>
+
+<script>
+function mostrar(secao) {
+    document.getElementById("perfil").classList.add("hidden");
+    document.getElementById("config").classList.add("hidden");
+    document.getElementById(secao).classList.remove("hidden");
+}
+
+// SALVAR PERFIL
+function salvarPerfil() {
+    let nome = document.getElementById("nome").value;
+    let email = document.getElementById("email").value;
+    let senha = document.getElementById("senha").value;
+
+    if (!nome || !email || !senha) {
+        alert("Preencha todos os campos!");
+        return;
+    }
+
+    localStorage.setItem("nome", nome);
+    localStorage.setItem("email", email);
+    localStorage.setItem("senha", senha);
+
+    document.getElementById("msgPerfil").innerText = "Perfil salvo!";
+}
+
+// CARREGAR PERFIL
+window.onload = function() {
+    document.getElementById("nome").value = localStorage.getItem("nome") || "";
+    document.getElementById("email").value = localStorage.getItem("email") || "";
+    document.getElementById("senha").value = localStorage.getItem("senha") || "";
+
+    document.getElementById("tema").value = localStorage.getItem("tema") || "claro";
+    aplicarTema();
+};
+
+// CONFIG
+function salvarConfig() {
+    let tema = document.getElementById("tema").value;
+    let notif = document.getElementById("notif").value;
+    let idioma = document.getElementById("idioma").value;
+
+    localStorage.setItem("tema", tema);
+    localStorage.setItem("notif", notif);
+    localStorage.setItem("idioma", idioma);
+
+    aplicarTema();
+
+    document.getElementById("msgConfig").innerText = "Configurações salvas!";
+}
+
+// TEMA ESCURO
+function aplicarTema() {
+    let tema = localStorage.getItem("tema");
+
+    if (tema === "escuro") {
+        document.body.classList.add("dark");
+    } else {
+        document.body.classList.remove("dark");
+    }
+}
+</script>
+
+</body>
+</html>
