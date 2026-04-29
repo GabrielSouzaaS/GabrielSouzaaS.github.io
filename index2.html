@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskPro</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
+
+body{
+  background:#0f172a;
+  color:#e2e8f0;
+}
+
+/* ANIMAÇÃO */
+.container, .task-box, .landing{
+  transition: all 0.3s ease;
+  opacity:1;
+}
+
+.hidden{
+  opacity:0;
+  transform:translateY(20px);
+  pointer-events:none;
+  position:absolute;
+  width:100%;
+}
+
+/* LAYOUT */
+.container{
+  max-width:400px;
+  margin:60px auto;
+  background:#1e293b;
+  padding:25px;
+  border-radius:12px;
+}
+
+.task-box{
+  max-width:600px;
+  margin:30px auto;
+  background:#1e293b;
+  padding:20px;
+  border-radius:12px;
+}
+
+h1,h2{text-align:center;margin-bottom:15px}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border:none;
+  border-radius:8px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  background:#3b82f6;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#2563eb;
+}
+
+button:active{
+  transform:scale(0.96);
+}
+
+.link{
+  text-align:center;
+  margin-top:10px;
+  cursor:pointer;
+  color:#93c5fd;
+}
+
+/* TASK */
+.task{
+  display:flex;
+  justify-content:space-between;
+  background:#334155;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+}
+
+.done{
+  text-decoration:line-through;
+  color:#94a3b8;
+}
+
+/* LANDING */
+.landing{
+  text-align:center;
+  margin-top:100px;
+}
+
+.landing h1{
+  font-size:40px;
+}
+
+.landing button{
+  width:200px;
+}
+
+/* TOAST */
+#toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#22c55e;
+  color:white;
+  padding:12px 20px;
+  border-radius:8px;
+  opacity:0;
+  transition:0.3s;
+}
+
+#toast.show{
+  opacity:1;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LANDING -->
+<div id="landing" class="landing">
+  <h1>Task dos jrs</h1>
+  <p>Organize sua vida e seus estudos</p>
+  <button onclick="showLogin()">Entrar</button>
+  <button onclick="showRegister()">Criar Conta</button>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="container hidden">
+  <h2>Login</h2>
+  <input type="text" id="loginUser" placeholder="Usuário">
+  <input type="password" id="loginPass" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
+  <div class="link" onclick="showRegister()">Criar conta</div>
+</div>
+
+<!-- REGISTER -->
+<div id="register" class="container hidden">
+  <h2>Cadastro</h2>
+  <input type="text" id="regUser" placeholder="Usuário">
+  <input type="password" id="regPass" placeholder="Senha">
+  <button onclick="register()">Cadastrar</button>
+  <div class="link" onclick="showLogin()">Já tenho conta</div>
+</div>
+
+<!-- APP -->
+<div id="app" class="task-box hidden">
+  <h2>📋 Minhas Tarefas</h2>
+
+  <input type="text" id="taskInput" placeholder="Nova tarefa">
+  <button onclick="addTask()">Adicionar</button>
+
+  <button onclick="logout()" style="background:#ef4444;margin-top:15px;">Sair</button>
+
+  <div id="taskList"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let currentUser = localStorage.getItem("currentUser");
+let tasks = JSON.parse(localStorage.getItem("tasks_" + currentUser)) || [];
+
+/* TOAST */
+function showToast(msg, error=false){
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.style.background = error ? "#ef4444" : "#22c55e";
+  toast.classList.add("show");
+  setTimeout(()=>toast.classList.remove("show"), 2000);
+}
+
+/* NAV */
+function showLogin(){
+  hideAll();
+  document.getElementById("login").classList.remove("hidden");
+}
+
+function showRegister(){
+  hideAll();
+  document.getElementById("register").classList.remove("hidden");
+}
+
+function showApp(){
+  hideAll();
+  document.getElementById("app").classList.remove("hidden");
+  renderTasks();
+}
+
+function hideAll(){
+  document.getElementById("landing").classList.add("hidden");
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("register").classList.add("hidden");
+  document.getElementById("app").classList.add("hidden");
+}
+
+/* AUTH */
+function register(){
+  const user = document.getElementById("regUser").value;
+  const pass = document.getElementById("regPass").value;
+
+  if(!user || !pass){
+    showToast("Preencha todos os campos", true);
+    return;
+  }
+
+  users.push({user, pass});
+  localStorage.setItem("users", JSON.stringify(users));
+
+  showToast("Conta criada com sucesso!");
+  showLogin();
+}
+
+function login(){
+  const user = document.getElementById("loginUser").value;
+  const pass = document.getElementById("loginPass").value;
+
+  const found = users.find(u => u.user === user && u.pass === pass);
+
+  if(!found){
+    showToast("Usuário ou senha incorretos", true);
+    return;
+  }
+
+  localStorage.setItem("currentUser", user);
+  currentUser = user;
+  tasks = JSON.parse(localStorage.getItem("tasks_" + currentUser)) || [];
+
+  showToast("Login realizado!");
+  showApp();
+}
+
+function logout(){
+  localStorage.removeItem("currentUser");
+  location.reload();
+}
+
+/* TASKS */
+function saveTasks(){
+  localStorage.setItem("tasks_" + currentUser, JSON.stringify(tasks));
+}
+
+function addTask(){
+  const input = document.getElementById("taskInput");
+
+  if(!input.value){
+    showToast("Digite uma tarefa", true);
+    return;
+  }
+
+  tasks.push({text: input.value, done:false});
+  input.value="";
+  saveTasks();
+  renderTasks();
+
+  showToast("Tarefa adicionada!");
+}
+
+function toggleTask(i){
+  tasks[i].done = !tasks[i].done;
+  saveTasks();
+  renderTasks();
+}
+
+function deleteTask(i){
+  tasks.splice(i,1);
+  saveTasks();
+  renderTasks();
+}
+
+function renderTasks(){
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  tasks.forEach((t,i)=>{
+    const div = document.createElement("div");
+    div.className="task";
+
+    const span = document.createElement("span");
+    span.textContent = t.text;
+    if(t.done) span.classList.add("done");
+    span.onclick = ()=>toggleTask(i);
+
+    const del = document.createElement("button");
+    del.textContent="❌";
+    del.style.width="50px";
+    del.onclick = ()=>deleteTask(i);
+
+    div.appendChild(span);
+    div.appendChild(del);
+    list.appendChild(div);
+    /* INIT */
+if(currentUser){
+    showApp();
+  }else{
+    document.getElementById("landing").classList.remove("hidden");
+  }
+  });
+}
+</script>
+
+</body>
+</html>
+
